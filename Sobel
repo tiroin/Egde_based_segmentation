@@ -1,0 +1,21 @@
+
+I = imread('lenna.png');
+Igray = im2gray(I);
+Igray = double(Igray); 
+
+
+sobel_x = [-1 0 1; -2 0 2; -1 0 1];   % Phát hiện biên theo chiều ngang
+sobel_y = [-1 -2 -1; 0 0 0; 1 2 1];   % Phát hiện biên theo chiều dọc
+
+% Tính đạo hàm theo X và Y bằng tích chập (convolution)
+Gx = conv2(Igray, sobel_x, 'same');
+Gy = conv2(Igray, sobel_y, 'same');
+
+% Tính cường độ biên (magnitude)
+G = sqrt(Gx.^2 + Gy.^2);
+G = uint8(255 * mat2gray(G));
+
+figure;
+subplot(1,2,1); imshow(uint8(Igray)); title('Ảnh gốc');
+subplot(1,2,2); imshow(G); title('Biên ảnh (Sobel Magnitude)');
+
