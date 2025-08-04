@@ -1,0 +1,36 @@
+
+Igray = imread('lenna.png');
+Igray = rgb2gray(Igray);
+Igray = double(Igray);  
+
+% Thông số Gaussian
+sigma = 0.7;               
+gauss_size = 5;          
+
+
+center = floor(gauss_size / 2);
+[x, y] = meshgrid(-center:center, -center:center);
+G_kernel = exp(-(x.^2 + y.^2) / (2 * sigma^2));
+G_kernel = G_kernel / sum(G_kernel(:));  
+
+
+I_smooth = conv2(Igray, G_kernel, 'same');  
+
+
+laplacian_kernel = [0 1 0; 1 -4 1; 0 1 0];
+
+
+LoG = conv2(I_smooth, laplacian_kernel, 'same');
+LoG_disp = uint8(255 * mat2gray(abs(LoG))); 
+
+
+figure;
+subplot(1, 2, 1);
+imshow(uint8(Igray));
+title('Ảnh gốc');
+
+subplot(1, 2, 2);
+imshow(LoG_disp);
+title('Biên ảnh - Laplacian of Gaussian');
+
+
