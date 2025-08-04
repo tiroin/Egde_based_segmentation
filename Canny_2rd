@@ -1,0 +1,83 @@
+% Đọc ảnh xám
+I = imread('lenna.png');
+I = rgb2gray(I);
+I = double(I);
+
+% 1. Làm mượt bằng bộ lọc Gaussian
+sigma = 1;
+G = fspecial('gaussian', [5 5], sigma);
+I_smooth = imfilter(I, G, 'same');
+
+
+[Gx, Gy] = imgradientxy(I_smooth, 'sobel');
+[Gmag, Gdir] = imgradient(Gx, Gy);
+
+
+[M, N] = size(Gmag);
+nms = zeros(M, N);
+angle = mod(Gdir, 180);  
+
+for i = 2:M-1
+    for j = 2:N-1
+        q = 255;
+        r = 255;
+
+       
+        if (angle(i,j) >= 0 && angle(i,j) < 22.5) || (angle(i,j) >= 157.5 && angle(i,j) <= 180)
+            q = Gmag(i, j+1);
+            r = Gmag(i, j-1);
+        elseif (angle(i,j) >= 22.5 && angle(i,j) < 67.5)
+            q = Gmag(i+1, j-1);
+            r = Gmag(i-1, j+1);
+        elseif (angle(i,j) >= 67.5 && angle(i,j) < 112.5)
+            q = Gmag(i+1, j);
+            r = Gmag(i-1, j);
+        elseif (angle(i,j) >= 112.5 && angle(i,j) < 157.5)
+            q = Gmag(i-1, j-1);
+            r = Gmag(i+1, j+1);
+        end
+
+        if (Gmag(i,j) >= q) && (Gmag(i,j) >= r)
+            nms(i,j) = Gmag(i,j);
+        else
+            nms(i,j) = 0;
+        end
+    end
+end
+
+
+T_high = max(nms(:)) * 0.2;
+T_low = T_high * 0.5;
+
+strong = 255;
+weak = 75;
+
+result = zeros(M, N);
+
+for i = 1:M
+    for j = 1:N
+        if nms(i,j) >= T_high
+            result(i,j) = strong;
+        elseif nms(i,j) >= T_low
+            result(i,j) = weak;
+        end
+    end
+end
+
+
+for i = 2:M-1
+    for j = 2:N-1
+        if result(i,j) == weak
+            if any(any(result(i-1:i+1, j-1:j+1) == strong))
+                result(i,j) = strong;
+            else
+                result(i,j) = 0;
+            end
+        end
+    end
+end
+
+% Hiển thị kết quả
+figure;
+subplot(1,2,1), imshow(uint8(I)), title('Ảnh gốc');
+subplot(1,2,2), imshow(uint8(result)), title('Biên Canny');
